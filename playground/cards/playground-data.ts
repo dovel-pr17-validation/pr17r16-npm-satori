@@ -1,0 +1,474 @@
+export type Tabs = {
+  [x: string]: string
+}
+
+const playgroundTabs: Tabs = {
+  Vercel: `<div
+  style={{
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    flexWrap: 'nowrap',
+    backgroundColor: 'white',
+    backgroundImage: 'radial-gradient(circle at 25px 25px, lightgray 2%, transparent 0%), radial-gradient(circle at 75px 75px, lightgray 2%, transparent 0%)',
+    backgroundSize: '100px 100px',
+  }}
+>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <svg
+      height={80}
+      viewBox="0 0 75 65"
+      fill="black"
+      style={{ margin: '0 75px' }}
+    >
+      <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
+    </svg>
+  </div>
+  <div
+    style={{
+      display: 'flex',
+      fontSize: 40,
+      fontStyle: 'normal',
+      color: 'black',
+      marginTop: 30,
+      lineHeight: 1.8,
+      whiteSpace: 'pre-wrap',
+    }}
+  >
+    <b>Agentic Infrastructure</b>
+  </div>
+</div>
+`,
+  Tailwind: `// Modified based on https://tailwindui.com/components/marketing/sections/cta-sections
+
+<div tw="flex flex-col w-full h-full items-center justify-center bg-white">
+  <div tw="bg-gray-50 flex w-full">
+    <div tw="flex flex-col md:flex-row w-full py-12 px-4 md:items-center justify-between p-8">
+      <h2 tw="flex flex-col text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 text-left">
+        <span>Ready to dive in?</span>
+        <span tw="text-indigo-600">Start your free trial today.</span>
+      </h2>
+      <div tw="mt-8 flex md:mt-0">
+        <div tw="flex rounded-md shadow">
+          <a tw="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-5 py-3 text-base font-medium text-white">Get started</a>
+        </div>
+        <div tw="ml-3 flex rounded-md shadow">
+          <a tw="flex items-center justify-center rounded-md border border-transparent bg-white px-5 py-3 text-base font-medium text-indigo-600">Learn more</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`,
+  Gradients: `<div
+  style={{
+    display: 'flex',
+    height: '100%',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    backgroundImage: 'linear-gradient(to bottom, #dbf4ff, #fff1f1)',
+    fontSize: 60,
+    letterSpacing: -2,
+    fontWeight: 700,
+    textAlign: 'center',
+  }}
+  >
+  <div
+    style={{
+      backgroundImage: 'linear-gradient(90deg, rgb(0, 124, 240), rgb(0, 223, 216))',
+      backgroundClip: 'text',
+      '-webkit-background-clip': 'text',
+      color: 'transparent',
+    }}
+  >
+    Develop
+  </div>
+  <div
+    style={{
+      backgroundImage: 'linear-gradient(90deg, rgb(121, 40, 202), rgb(255, 0, 128))',
+      backgroundClip: 'text',
+      '-webkit-background-clip': 'text',
+      color: 'transparent',
+    }}
+  >
+    Preview
+  </div>
+  <div
+    style={{
+      backgroundImage: 'linear-gradient(90deg, rgb(255, 77, 77), rgb(249, 203, 40))',
+      backgroundClip: 'text',
+      '-webkit-background-clip': 'text',
+      color: 'transparent',
+    }}
+  >
+    Ship
+  </div>
+</div>
+`,
+  Colors: `<div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    fontSize: 24,
+    fontWeight: 600,
+    textAlign: 'left',
+    padding: 70,
+    boxSizing: 'border-box',
+    color: 'red',
+    backgroundImage: 'linear-gradient(to right, #334d50, #cbcaa5)',
+    height: '100%',
+    width: '100%'
+  }}
+>
+
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: '#fff' }}>
+      #fff
+      <div style={{ fontWeight: 100 }}>hexadecimal</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: '#ffffff70' }}>
+      #ffffff70
+      <div style={{ fontWeight: 100 }}>hexadecimal + transparency</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'rgb(45, 45, 45)' }}>
+      rgb(45, 45, 45)
+      <div style={{ fontWeight: 100 }}>rgb</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'rgb(45, 45, 45, 0.3)' }}>
+      rgb(45, 45, 45, 0.3)
+      <div style={{ fontWeight: 100 }}>rgba</div>
+    </div>
+  </div>
+
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'hsl(186, 22%, 26%)' }}>
+      hsl(186, 22%, 26%)
+      <div style={{ fontWeight: 100 }}>hsl</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'hsla(186, 22%, 26%, 40%)' }}>
+      hsla(186, 22%, 26%, 40%)
+      <div style={{ fontWeight: 100 }}>hsla</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'white' }}>
+      "white"
+      <div style={{ fontWeight: 100 }}>predefined color names</div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px', color: 'currentcolor' }}>
+      should be red
+      <div style={{ fontWeight: 100 }}>"currentcolor"</div>
+    </div>
+  </div>
+</div>`,
+  Block: `// Children of a block container stack vertically and fill its width, and
+// the vertical margins between them collapse, like in browsers.
+
+<div
+  style={{
+    display: 'block',
+    height: '100%',
+    width: '100%',
+    padding: '40px 56px',
+    boxSizing: 'border-box',
+    backgroundImage: 'linear-gradient(to bottom right, #fff 50%, #e0f2fe)',
+    color: '#0f172a',
+  }}
+>
+  <div
+    style={{
+      fontSize: 16,
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      color: '#0284c7',
+      marginBottom: 24,
+    }}
+  >
+    Changelog
+  </div>
+  {/* The 24px margins above and below collapse into one. */}
+  <h1
+    style={{
+      fontSize: 44,
+      lineHeight: 1.1,
+      letterSpacing: -1.5,
+      margin: '24px 0 16px',
+    }}
+  >
+    Block layout, with margins that collapse
+  </h1>
+  <p
+    style={{
+      fontSize: 20,
+      lineHeight: 1.5,
+      color: '#475569',
+      margin: '16px 0 32px',
+    }}
+  >
+    Lay out content like a document, without flexDirection or fixed widths.
+    Text wraps to the width of its container.
+  </p>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      fontSize: 18,
+      color: '#64748b',
+    }}
+  >
+    <div
+      style={{
+        width: 32,
+        height: 32,
+        marginRight: 12,
+        borderRadius: 16,
+        backgroundImage: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+      }}
+    />
+    Satori Team · October 2026
+  </div>
+</div>
+`,
+  Grid: `// Place items in named grid areas, and size tracks with fr, minmax()
+// and repeat(), like in browsers.
+
+() => {
+  function Tile({ area, children, style }) {
+    return (
+      <div
+        style={{
+          gridArea: area,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: 20,
+          borderRadius: 16,
+          backgroundColor: '#1e293b',
+          ...style,
+        }}
+      >
+        {children}
+      </div>
+    )
+  }
+
+  function Label({ children }) {
+    return <div style={{ fontSize: 16, color: '#94a3b8' }}>{children}</div>
+  }
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateRows: 'repeat(2, 1fr)',
+        gridTemplateAreas: '"hero hero builds uptime" "hero hero regions regions"',
+        gap: 16,
+        height: '100%',
+        width: '100%',
+        padding: 32,
+        boxSizing: 'border-box',
+        backgroundColor: '#0f172a',
+        color: 'white',
+      }}
+    >
+      <Tile
+        area="hero"
+        style={{ backgroundImage: 'linear-gradient(135deg, #6366f1, #a855f7)' }}
+      >
+        <div style={{ fontSize: 16, fontWeight: 700 }}>
+          Satori
+        </div>
+        <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1.1, letterSpacing: -1.5 }}>
+          CSS Grid, with named areas
+        </div>
+      </Tile>
+      <Tile area="builds">
+        <Label>Build time</Label>
+        <div style={{ fontSize: 40, fontWeight: 700 }}>1.2s</div>
+      </Tile>
+      <Tile area="uptime">
+        <Label>Uptime</Label>
+        <div style={{ fontSize: 40, fontWeight: 700 }}>99.9%</div>
+      </Tile>
+      <Tile area="regions">
+        <Label>42 regions</Label>
+        {/* As many 14px columns as fit, stretched to fill the row. */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(14px, 1fr))',
+            gap: 6,
+          }}
+        >
+          {Array.from({ length: 42 }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                height: 14,
+                borderRadius: 4,
+                backgroundColor: i % 5 === 2 ? '#a855f7' : '#334155',
+              }}
+            />
+          ))}
+        </div>
+      </Tile>
+    </div>
+  )
+}
+`,
+  Stylesheet: `// Style elements with a <style> tag, like in browsers: selectors,
+// nesting, the cascade, CSS variables and media queries.
+
+<div className="card">
+  <style>{\`
+    .card {
+      --accent: #6366f1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      width: 100%;
+      padding: 48px;
+      box-sizing: border-box;
+      background: linear-gradient(135deg, #f8fafc, #e0e7ff);
+      color: #0f172a;
+
+      & h1 {
+        margin: 0;
+        font-size: 56px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+      & h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+
+      & ul {
+        display: flex;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+      }
+      & li {
+        display: flex;
+        padding: 6px 18px;
+        border: 2px solid var(--accent);
+        border-radius: 999px;
+        color: var(--accent);
+        font-size: 22px;
+
+        &:first-child {
+          background: var(--accent);
+          color: white;
+        }
+      }
+
+      & footer {
+        display: flex;
+        justify-content: space-between;
+        color: #64748b;
+        font-size: 20px;
+      }
+
+      /* Try a width below 600px. */
+      @media (width < 600px) {
+        padding: 24px;
+        & h1 { font-size: 36px }
+        & li:nth-child(n + 3) { display: none }
+      }
+    }
+  \`}</style>
+  <h1>
+    Style your images with <em>CSS</em>
+  </h1>
+  <ul>
+    <li>Selectors</li>
+    <li>Nesting</li>
+    <li>Cascade</li>
+    <li>@media</li>
+  </ul>
+  <footer>
+    <span>vercel/satori</span>
+    <span>og-playground</span>
+  </footer>
+</div>
+`,
+  Advanced: `// Fallback fonts and Emoji are dynamically loaded
+// from Google Fonts and CDNs in this demo.
+
+// You can also return a function component in the playground.
+() => {
+  function Label({ children }) {
+    return <label style={{
+      fontSize: 15,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      margin: '25px 0 10px',
+      color: 'gray',
+    }}>
+      {children}
+    </label>
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        padding: '10px 20px',
+        boxSizing: 'border-box',
+        justifyContent: 'center',
+        fontFamily: 'Geist, "Material Icons"',
+        fontSize: 28,
+        backgroundColor: 'white',
+      }}
+      >
+      <Label>Language & Font subsets</Label>
+      <div>
+        Hello! 你好! 안녕! こんにちは! Χαίρετε! Hallå!
+      </div>
+      <Label>Emoji</Label>
+      <div>
+        👋 😄 🎉 🎄 🦋
+      </div>
+      <Label>Icon font</Label>
+      <div>
+          &#xe766; &#xeb9b; &#xf089;
+      </div>
+      <Label>Lang attribute</Label>
+      <div style={{ display: 'flex' }}>
+        <span lang="ja-JP">
+          骨茶
+        </span>/
+        <span lang="zh-CN">
+          骨茶
+        </span>/
+        <span lang="zh-TW">
+          骨茶
+        </span>/
+        <span lang="zh-HK">
+          骨茶
+        </span>
+      </div>
+    </div>
+  )
+}
+`,
+}
+
+export default playgroundTabs

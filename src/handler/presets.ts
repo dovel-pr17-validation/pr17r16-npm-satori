@@ -1,0 +1,264 @@
+/**
+ * Pre-defined styles for elements. Here we hand pick some from Chromium's
+ * default styles:
+ * https://chromium.googlesource.com/chromium/blink/+/master/Source/core/css/html.css
+ *
+ * Elements are inline by default, the initial value of `display`.
+ */
+
+const DEFAULT_DISPLAY = 'block'
+
+const block = { display: DEFAULT_DISPLAY }
+const hidden = { display: 'none' }
+const inlineBlock = { display: 'inline-block' }
+
+export default {
+  // Elements that aren't rendered.
+  area: hidden,
+  base: hidden,
+  basefont: hidden,
+  datalist: hidden,
+  head: hidden,
+  link: hidden,
+  meta: hidden,
+  noembed: hidden,
+  noframes: hidden,
+  param: hidden,
+  rp: hidden,
+  script: hidden,
+  style: hidden,
+  template: hidden,
+  title: hidden,
+
+  // The document, as when a page is rendered.
+  html: block,
+  body: { display: DEFAULT_DISPLAY, margin: 8 },
+
+  // Generic block-level elements
+  address: block,
+  article: block,
+  aside: block,
+  details: block,
+  // An open dialog that isn't modal. Closed ones are hidden, see
+  // `getHiddenPreset()`.
+  dialog: {
+    display: DEFAULT_DISPLAY,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    width: 'fit-content',
+    height: 'fit-content',
+    margin: 'auto',
+    borderWidth: 3,
+    borderStyle: 'solid',
+    padding: '1em',
+    backgroundColor: 'white',
+    color: 'black',
+  },
+  figcaption: block,
+  footer: block,
+  form: block,
+  header: block,
+  hgroup: block,
+  main: block,
+  nav: block,
+  search: block,
+  section: block,
+  summary: block,
+  figure: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    marginLeft: 40,
+    marginRight: 40,
+  },
+  p: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+  },
+  div: {
+    display: DEFAULT_DISPLAY,
+  },
+  blockquote: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    marginLeft: 40,
+    marginRight: 40,
+  },
+  center: {
+    display: DEFAULT_DISPLAY,
+    textAlign: 'center',
+  },
+  hr: {
+    display: DEFAULT_DISPLAY,
+    color: 'gray',
+    marginTop: '0.5em',
+    marginBottom: '0.5em',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    borderWidth: 1,
+    borderStyle: 'inset',
+    overflow: 'hidden',
+  },
+  // Heading elements
+  h1: {
+    display: DEFAULT_DISPLAY,
+    fontSize: '2em',
+    marginTop: '0.67em',
+    marginBottom: '0.67em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  h2: {
+    display: DEFAULT_DISPLAY,
+    fontSize: '1.5em',
+    marginTop: '0.83em',
+    marginBottom: '0.83em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  h3: {
+    display: DEFAULT_DISPLAY,
+    fontSize: '1.17em',
+    marginTop: '1em',
+    marginBottom: '1em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  h4: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1.33em',
+    marginBottom: '1.33em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  h5: {
+    display: DEFAULT_DISPLAY,
+    fontSize: '0.83em',
+    marginTop: '1.67em',
+    marginBottom: '1.67em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  h6: {
+    display: DEFAULT_DISPLAY,
+    fontSize: '0.67em',
+    marginTop: '2.33em',
+    marginBottom: '2.33em',
+    marginLeft: 0,
+    marginRight: 0,
+    fontWeight: 'bold',
+  },
+  // Tables
+  // Lists, see `getListPresets()` for their list styles
+  ul: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    paddingLeft: 40,
+  },
+  ol: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    paddingLeft: 40,
+  },
+  menu: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    paddingLeft: 40,
+  },
+  dir: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+    paddingLeft: 40,
+  },
+  li: { display: 'list-item' },
+  dl: {
+    display: DEFAULT_DISPLAY,
+    marginTop: '1em',
+    marginBottom: '1em',
+  },
+  dt: block,
+  dd: {
+    display: DEFAULT_DISPLAY,
+    marginLeft: 40,
+  },
+  // Form elements
+  // Inline elements
+  u: {
+    textDecoration: 'underline',
+  },
+  strong: {
+    fontWeight: 'bold',
+  },
+  b: {
+    fontWeight: 'bold',
+  },
+  i: {
+    fontStyle: 'italic',
+  },
+  em: {
+    fontStyle: 'italic',
+  },
+  code: {
+    fontFamily: 'monospace',
+  },
+  kbd: {
+    fontFamily: 'monospace',
+  },
+  pre: {
+    display: DEFAULT_DISPLAY,
+    fontFamily: 'monospace',
+    whiteSpace: 'pre',
+    marginTop: '1em',
+    marginBottom: '1em',
+  },
+  mark: {
+    backgroundColor: 'yellow',
+    color: 'black',
+  },
+  big: {
+    fontSize: 'larger',
+  },
+  small: {
+    fontSize: 'smaller',
+  },
+  s: {
+    textDecoration: 'line-through',
+  },
+
+  // Form controls
+  input: inlineBlock,
+  button: inlineBlock,
+  // The default styles of Chrome. List boxes have rounded corners, see
+  // `getSelectPreset()`.
+  select: {
+    display: 'inline-block',
+    boxSizing: 'border-box',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#767676',
+    backgroundColor: 'white',
+    color: 'black',
+    fontSize: '13.333333px',
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    lineHeight: 'normal',
+    letterSpacing: 'normal',
+    textTransform: 'none',
+    textIndent: 0,
+    textAlign: 'start',
+    whiteSpace: 'pre',
+  },
+  textarea: inlineBlock,
+}

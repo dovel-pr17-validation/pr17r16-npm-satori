@@ -1,0 +1,421 @@
+import { Counters } from './list-marker.js'
+import type { ReactElement, ReactNode } from 'react'
+import type { TwConfig } from 'twrnc'
+import type { SatoriNode } from './layout.js'
+import {
+  getStyleError,
+  ROOT_STYLE,
+  type ReplacedElementHandlers,
+} from './handler/compute.js'
+import type { ProjectPlane } from './builder/transform.js'
+
+import layout from './layout.js'
+import FontLoader, { FontOptions } from './font.js'
+import svg from './builder/svg.js'
+import { getLayoutEngine } from './layout-engine/wasm.js'
+import { LayoutNode, type LayoutEngine } from './layout-engine/index.js'
+import { detectLanguageCode, LangCode, Locale } from './language.js'
+import getTw from './handler/tailwind.js'
+import { preProcessNode } from './handler/preprocess.js'
+import { resolveComponents } from './handler/components.js'
+import {
+  applyStyleSheets,
+  type ContainerQueries,
+} from './handler/stylesheet.js'
+import { cache, inflightRequests } from './handler/image.js'
+import { segment } from './utils.js'
+import { initHarfBuzz } from './harfbuzz.js'
+import type { PaintBounds } from './culling.js'
+import {
+  sizeStaticPositionPlaceholders,
+  type FixedElement,
+} from './fixed-position.js'
+
+// We don't need to initialize the opentype instances every time.
+const fontCache = new WeakMap()
+
+// Users often build the `fonts` array inline on every render while reusing
+// the same underlying font data buffers. Identify loaders by the identity of
+// each font's data buffer plus its metadata, so an equivalent inline array
+// still hits the cached FontLoader (and its shaping caches).
+const fontDataIds = new WeakMap<Buffer | ArrayBuffer, number>()
+let nextFontDataId = 0
+const MAX_FONT_LOADERS = 8
+const fontLoaderCache = new Map<string, FontLoader>()
+
+function getFontLoaderKey(fonts: FontOptions[]): string {
+  let key = ''
+  for (const font of fonts) {
+    let id = fontDataIds.get(font.data)
+    if (id === undefined) {
+      id = ++nextFontDataId
+      fontDataIds.set(font.data, id)
+    }
+    key += `${id}:${font.name}:${font.weight ?? ''}:${font.style ?? ''}:${
+      font.lang ?? ''
+    };`
+  }
+  return key
+}
+
+function getFontLoader(
+  fonts: FontOptions[],
+  layoutEngine: LayoutEngine
+): FontLoader {
+  // Fast path: the exact same array instance.
+  if (fontCache.has(fonts)) {
+    return fontCache.get(fonts)
+  }
+
+  const key = getFontLoaderKey(fonts)
+  let loader = fontLoaderCache.get(key)
+
+  if (!loader) {
+    loader = new FontLoader(fonts, (data) => layoutEngine.decodeWoff2(data))
+    if (fontLoaderCache.size >= MAX_FONT_LOADERS) {
+      const oldestKey = fontLoaderCache.keys().next().value
+      if (oldestKey !== undefined) fontLoaderCache.delete(oldestKey)
+    }
+    fontLoaderCache.set(key, loader)
+  }
+
+  fontCache.set(fonts, loader)
+  return loader
+}
+
+export type SatoriOptions = (
+  | {
+      width: number
+      height: number
+    }
+  | {
+      width: number
+    }
+  | {
+      height: number
+    }
+) & {
+  fonts: FontOptions[]
+  embedFont?: boolean
+  debug?: boolean
+  graphemeImages?: Record<string, string>
+  loadAdditionalAsset?: (
+    languageCode: string,
+    segment: string
+  ) => Promise<string | Array<FontOptions>>
+  tailwindConfig?: TwConfig
+  onNodeDetected?: (node: SatoriNode) => void
+  /**
+   * Called with the error of each invalid or unsupported style declaration,
+   * which is then ignored instead of failing the render.
+   */
+  onStyleError?: (error: Error) => void
+  /**
+   * Converts colors that SVG renderers may not support, like `oklch()`,
+   * `lab()` and `color-mix()`, to `rgb()` and `rgba()`. Set it to `false` to
+   * keep them as they are written. Defaults to `true`.
+   */
+  convertColors?: boolean
+  pointScaleFactor?: number
+}
+export type { SatoriNode }
+
+const satori: (element: ReactNode, options: SatoriOptions) => Promise<string> =
+  render
+export default satori
+
+/**
+ * @internal Extensions provided by `satori/experimental`.
+ */
+export interface RenderExtensions {
+  /** Elements such as `<canvas>` that are drawn as images. */
+  replacedElements?: ReplacedElementHandlers
+  /** Draws elements with perspective. */
+  projectPlane?: ProjectPlane
+}
+
+/**
+ * @internal Render with extensions. Not exported from the root entry.
+ */
+export async function render(
+  element: ReactNode,
+  options: SatoriOptions,
+  { replacedElements, projectPlane }: RenderExtensions = {}
+): Promise<string> {
+  // Initialize the layout and shaping engines together.
+  const [layoutEngine] = await Promise.all([getLayoutEngine(), initHarfBuzz()])
+  if (!layoutEngine) {
+    throw new Error(
+      'Satori is not initialized: expect the layout engine to be loaded, got ' +
+        layoutEngine
+    )
+  }
+
+  options.fonts = options.fonts || []
+
+  const font = getFontLoader(options.fonts, layoutEngine)
+
+  const definedWidth = 'width' in options ? options.width : undefined
+  const definedHeight = 'height' in options ? options.height : undefined
+
+  // Use a null-prototype object so that text matching Object.prototype property
+  // names (e.g. "constructor", "toString") doesn't inherit truthy values from
+  // the prototype chain when we look it up via `graphemeImages[text]`.
+  const graphemeImages = Object.assign(
+    Object.create(null),
+    options.graphemeImages
+  )
+  // Some Chinese characters have different glyphs in Chinese and
+  // Japanese, but their Unicode is the same. If the user needs to display
+  // the Chinese and Japanese characters simultaneously correctly, the user
+  // needs to download the Chinese and Japanese fonts, respectively.
+  // Assuming that the user has downloaded the corresponding Japanese font,
+  // to let the program realize that the font has not been downloaded in Chinese,
+  // we need to prohibit Japanese as the fallback when executing `engine.has`.
+  //
+  // This causes a problem. Consider a scenario where we need to display Chinese
+  // correctly under tags with `lang="ja"` set. `engine.has` will repeatedly treat
+  // the Chinese as missing font because we have removed the Chinese as a fallback.
+  // To address this situation, we may need to add `processedWordsMissingFont`
+  const processedWordsMissingFonts = new Set()
+
+  // Render the components first, so that the whole tree is known before
+  // layout, including the images to load and the elements that stylesheets
+  // apply to.
+  element = await resolveComponents(element)
+  // Style errors of a first pass, which container queries need, are reported
+  // by the second one instead.
+  let pendingErrors: Error[] | undefined = []
+  const onStyleError =
+    options.onStyleError &&
+    ((error: Error) =>
+      pendingErrors ? pendingErrors.push(error) : options.onStyleError(error))
+
+  cache.clear()
+  inflightRequests.clear()
+
+  const containers: ContainerQueries = {}
+  let pass = await layOut()
+  if (containers.queried) {
+    // Container queries use the content box of containers.
+    containers.sizes = new Map()
+    for (const [index, node] of pass.containerNodes) {
+      const { width, height, padding, border } = node.layout
+      if (!padding || !border) continue
+      containers.sizes.set(index, {
+        width:
+          width - padding.left - padding.right - border.left - border.right,
+        height:
+          height - padding.top - padding.bottom - border.top - border.bottom,
+      })
+    }
+    pendingErrors = undefined
+    pass = await layOut()
+  } else {
+    const errors = pendingErrors
+    pendingErrors = undefined
+    for (const error of errors) options.onStyleError?.(error)
+  }
+
+  // What's entirely outside of the image isn't drawn.
+  pass.paintBounds.width = pass.root.layout.width
+  pass.paintBounds.height = pass.root.layout.height
+  const content = (await pass.handler.next([0, 0])).value as string
+
+  return svg({
+    width: pass.root.layout.width,
+    height: pass.root.layout.height,
+    content,
+  })
+
+  /**
+   * Applies the stylesheets and lays out the tree, which is drawn by the last
+   * step of `handler`.
+   */
+  async function layOut() {
+    // Like in browsers, invalid declarations of stylesheets are dropped.
+    const tree = await applyStyleSheets(
+      element,
+      layoutEngine,
+      { width: definedWidth, height: definedHeight },
+      {
+        getError: (name, value) =>
+          getStyleError({ [name]: value }, options.convertColors ?? true),
+        onError: onStyleError,
+      },
+      containers
+    )
+    const svgFilters = new Map<string, ReactElement>()
+    await preProcessNode(tree, svgFilters)
+
+    // Like the initial containing block, the root element is laid out in a
+    // block formatting context.
+    const root = new LayoutNode({
+      display: 'flow-root',
+      width: definedWidth || 'auto',
+      height: definedHeight || 'auto',
+      overflowX: 'hidden',
+      overflowY: 'hidden',
+    })
+
+    const fixedElements: FixedElement[] = []
+    const containerNodes = new Map<number, LayoutNode>()
+    const paintBounds: PaintBounds = { width: 0, height: 0 }
+    const handler = layout(tree, {
+      id: 'id',
+      parentStyle: {},
+      inheritedStyle: {
+        ...ROOT_STYLE,
+
+        // Special style properties:
+        _viewportWidth: definedWidth,
+        _viewportHeight: definedHeight,
+      },
+      parent: root,
+      font,
+      embedFont: options.embedFont,
+      debug: options.debug,
+      graphemeImages,
+      canLoadAdditionalAssets: !!options.loadAdditionalAsset,
+      onNodeDetected: options.onNodeDetected,
+      onStyleError,
+      convertColors: options.convertColors ?? true,
+      pointScaleFactor: options.pointScaleFactor,
+      replacedElements,
+      projectPlane,
+      // Fixed elements are positioned relative to the viewport by default.
+      fixedContainingBlock: { node: root, offset: { left: 0, top: 0 } },
+      counters: new Counters(),
+      // Sticky elements stick to the viewport by default.
+      parentBox: { node: root, offset: { left: 0, top: 0 } },
+      scrollport: { node: root, offset: { left: 0, top: 0 } },
+      // So are absolutely positioned ones without a positioned ancestor.
+      absoluteContainingBlock: { node: root, offset: { left: 0, top: 0 } },
+      fixedElements,
+      paintBounds,
+      svgFilters,
+      floats: { found: false },
+      formattingContext: 'root',
+      containers: containerNodes,
+      computeLayout: (node, { width, height }) =>
+        layoutEngine.computeLayout(node, {
+          width,
+          height,
+          pointScaleFactor: options.pointScaleFactor,
+        }),
+      getTwStyles: (tw, style) => {
+        const twToStyles = getTw({
+          width: definedWidth,
+          height: definedHeight,
+          config: options.tailwindConfig,
+        })
+        const twStyles = { ...twToStyles([tw] as any) }
+        if (typeof twStyles.lineHeight === 'number') {
+          twStyles.lineHeight =
+            twStyles.lineHeight / (+twStyles.fontSize || style.fontSize || 16)
+        }
+        if (twStyles.shadowColor && twStyles.boxShadow) {
+          twStyles.boxShadow = (twStyles.boxShadow as string).replace(
+            /rgba?\([^)]+\)/,
+            twStyles.shadowColor as string
+          )
+        }
+        return twStyles
+      },
+    })
+
+    const segmentsMissingFont = (await handler.next()).value as {
+      word: string
+      locale?: Locale
+    }[]
+
+    if (options.loadAdditionalAsset) {
+      if (segmentsMissingFont.length) {
+        const languageCodes = convertToLanguageCodes(segmentsMissingFont)
+        const fonts: FontOptions[] = []
+        const images: Record<string, string> = {}
+
+        await Promise.all(
+          Object.entries(languageCodes).flatMap(([code, segments]) =>
+            segments.map((_segment) => {
+              const key = `${code}_${_segment}`
+              if (processedWordsMissingFonts.has(key)) {
+                return null
+              }
+              processedWordsMissingFonts.add(key)
+
+              return options
+                .loadAdditionalAsset(code, _segment)
+                .then((asset: any) => {
+                  if (typeof asset === 'string') {
+                    images[_segment] = asset
+                  } else if (asset) {
+                    if (Array.isArray(asset)) {
+                      fonts.push(...asset)
+                    } else {
+                      fonts.push(asset)
+                    }
+                  }
+                })
+            })
+          )
+        )
+
+        // Directly mutate the font provider and the grapheme map.
+        font.addFonts(fonts)
+        Object.assign(graphemeImages, images)
+      }
+    }
+
+    await handler.next()
+    const layoutOptions = {
+      width: definedWidth,
+      height: definedHeight,
+      pointScaleFactor: options.pointScaleFactor,
+    }
+    layoutEngine.computeLayout(root, layoutOptions)
+    // The static position of a fixed element depends on its size.
+    if (sizeStaticPositionPlaceholders(fixedElements)) {
+      layoutEngine.computeLayout(root, layoutOptions)
+    }
+
+    return { root, handler, containerNodes, paintBounds }
+  }
+}
+
+function convertToLanguageCodes(
+  segmentsMissingFont: { word: string; locale?: Locale }[]
+): Partial<Record<LangCode, string[]>> {
+  const languageCodes = {}
+  let wordsByCode = {}
+
+  for (const { word, locale } of segmentsMissingFont) {
+    const code = detectLanguageCode(word, locale).join('|')
+    wordsByCode[code] = wordsByCode[code] || ''
+    wordsByCode[code] += word
+  }
+
+  Object.keys(wordsByCode).forEach((code: LangCode) => {
+    languageCodes[code] = languageCodes[code] || []
+    if (code === 'emoji') {
+      languageCodes[code].push(
+        ...unique(segment(wordsByCode[code], 'grapheme'))
+      )
+    } else {
+      languageCodes[code][0] = languageCodes[code][0] || ''
+      languageCodes[code][0] += unique(
+        segment(
+          wordsByCode[code],
+          'grapheme',
+          code === 'unknown' ? undefined : code
+        )
+      ).join('')
+    }
+  })
+
+  return languageCodes
+}
+
+function unique<T>(arr: T[]): T[] {
+  return Array.from(new Set(arr))
+}
